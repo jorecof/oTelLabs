@@ -127,6 +127,24 @@ app = FastAPI(
 )
 
 
+# ── [PARCHE] Instrumentos HTTP para dashboards SLI ───────────────────────────
+http_requests_total = meter.create_counter("http_requests_total", description="Total HTTP requests", unit="1")
+http_request_duration = meter.create_histogram("http_request_duration_seconds", description="Latencia HTTP", unit="s")
+
+# ── [PARCHE] Middleware de métricas con etiqueta status ──────────────────────
+import time as _otel_time
+@app.middleware("http")
+async def _otel_metrics_mw(request, call_next):
+    _start = _otel_time.time()
+    response = await call_next(request)
+    _lbl = {"method": request.method, "status": str(response.status_code)}
+    try:
+        http_requests_total.add(1, _lbl)
+        http_request_duration.record(_otel_time.time() - _start, _lbl)
+    except Exception:
+        pass
+    return response
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "service-b"}

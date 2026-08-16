@@ -133,8 +133,8 @@ processors:
 
 exporters:
   # ── Jaeger: trazas distribuidas (GCP) ─────────────────────────────────────
-  jaeger:
-    endpoint: jaeger:14250
+  otlp/jaeger:
+    endpoint: jaeger:4317
     tls:
       insecure: true
 
@@ -147,7 +147,6 @@ exporters:
   # ── Prometheus: métricas con endpoint scraping ─────────────────────────────
   prometheus:
     endpoint: "0.0.0.0:8889"
-    namespace: otelcol
     send_timestamps: true
     metric_expiration: 3m
     resource_to_telemetry_conversion:
@@ -200,7 +199,7 @@ service:
         - filter/health     # Excluir health checks
         - batch
       exporters:
-        - jaeger            # Jaeger UI para visualización
+        - otlp/jaeger            # Jaeger UI para visualización
         - otlp/tempo        # Tempo (Grafana stack)
         - logging
 
@@ -225,8 +224,6 @@ service:
         - resource
         - batch
       exporters:
-        - googlecloud       # Cloud Logging (GCP)
-        - awscloudwatchlogs # CloudWatch (AWS)
         - logging
 
   telemetry:

@@ -19,3 +19,4 @@ prometheus-client==0.20.0
 opentelemetry-instrumentation-fastapi==0.45b0
 opentelemetry-instrumentation-httpx==0.45b0
 opentelemetry-instrumentation-psycopg2==0.45b0
+setuptools<81

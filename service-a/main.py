@@ -148,6 +148,21 @@ app = FastAPI(
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
+
+# ── [PARCHE] Middleware de métricas con etiqueta status ──────────────────────
+import time as _otel_time
+@app.middleware("http")
+async def _otel_metrics_mw(request, call_next):
+    _start = _otel_time.time()
+    response = await call_next(request)
+    _lbl = {"method": request.method, "status": str(response.status_code)}
+    try:
+        http_requests_total.add(1, _lbl)
+        http_request_duration.record(_otel_time.time() - _start, _lbl)
+    except Exception:
+        pass
+    return response
+
 @app.get("/health")
 async def health():
     """Health check — no genera trazas (excluido en el Collector)."""
@@ -165,7 +180,7 @@ async def get_order(order_id: str, request: Request):
     start = time.time()
     labels = {"endpoint": "/order", "method": "GET"}
     active_requests.add(1, labels)
-    http_requests_total.add(1, labels)
+    http_requests_total.add(0, labels)  # [parche]
 
     try:
         # ── Custom span: lógica de negocio DB ────────────────────────────────
